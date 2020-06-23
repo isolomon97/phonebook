@@ -503,10 +503,11 @@ For this reason, we introduce a named constant called `TOMBSTONE` in
 *softly deleted* `KVPair`s in the table. It is **supremely important** to
 understand the following things about this constant:
 
- * Any memory address that holds this constant is an *available* position
+ * Normally, any memory address that holds this constant is an *available* position
    for insertion of a new key. Therefore, for purposes of **insertion**, if
    the hash table in question soft-deletes, you can treat a
-   tombstone-containing cell as an empty cell.
+   tombstone-containing cell as an empty cell. **However**, to make things
+   considerably easier, we will *not* insert into cells containing a `TOMBSTONE`.
  * Any memory address that holds this constant is **not** a `null` cell! So,
    the collision chains that "went over" this memory address before the soft
    deletions still continue to "go over it"! We **do not break** collision
@@ -551,11 +552,12 @@ In this project, we will be checking the number of probes you make to insert/sea
 
 * When you have to resize, you should also count the number of probes you make reinserting each elements.
 * In quadratic probing, you will have to reinsert all elements during resizing for hard deletion, because there will not be a cluster for quadratic probing. 
-* For all hash table for soft deletion, we do not utilize tombstone for insertion. (That is, when you try to insert an element, we only use next null cell for insertion.)
+* For all hash tables employing soft deletion, we *do not* utilize tombstones for insertion. (That is, when you try to insert an element, we only use next null cell for insertion.)
 * Resize policy: 
-   1. Check if 50% < (number of elements + number of tombstone) / capacity. 
-   2. Do not reinsert tombstone back into the table. 
-   3. You may choose to enlarge the capacity, or remain the capacity during the resize.
+   1. Check if 50% < (number of elements + number of tombstones) / capacity. 
+   2. Do not reinsert tombstones back into the table. 
+   3. You may choose to enlarge the capacity, or retain the capacity during the resize.
+* For Separate Chaining, let `KVPairList` do the work of probe-counting for you!
 
 ## FAQs
 
