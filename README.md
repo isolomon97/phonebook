@@ -556,7 +556,9 @@ In this project, we will be checking the number of probes you make to insert/sea
 * Resize policy: 
    1. Check if 50% < (number of elements + number of tombstones) / capacity. 
    2. Do not reinsert tombstones back into the table. 
-   3. You may choose to enlarge the capacity, or retain the capacity during the resize.
+   3. If the number of actual elements (that is, excluding tombstones) is
+      below the threshold for resizing, we reinsert the elements without
+      increasing the capacity of the table.
 * For Separate Chaining, let `KVPairList` do the work of probe-counting for you!
 
 ## FAQs
