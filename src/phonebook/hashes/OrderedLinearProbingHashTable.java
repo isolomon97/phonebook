@@ -72,12 +72,13 @@ public class OrderedLinearProbingHashTable extends OpenAddressingHashTable {
 
 
     /**
-     * <b>Return</b> and <b>remove</b> the value associated with key in the {@link HashTable}. If key does not exist in the database
+     * <b>Return</b> the value associated with key in the {@link HashTable}, and <b>remove</b> the {@link phonebook.utils.KVPair} from the table.
+     * If key does not exist in the database
      * or if key = {@code null}, this method returns {@code null}. This method is expected to run in <em>amortized constant time</em>.
      *
      * @param key The key to search for.
      * @return The {@link phonebook.utils.Probes} with associated value and the number of probe used. If the key is {@code null}, return value {@code null}
-     * and 0 as number of probes; if the key dones't exists in the database, return {@code null} and the number of probes used.
+     * and 0 as number of probes; if the key doesn't exist in the database, return {@code null} and the number of probes used.
      */
     @Override
     public Probes remove(String key) {
