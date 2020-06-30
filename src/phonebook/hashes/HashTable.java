@@ -43,10 +43,11 @@ public interface HashTable {
     Probes get(String key);
 
     /**
-     * <b>Return</b> and <b>remove</b> the value associated with key in the {@link HashTable}. This method is expected to run in <em>amortized constant time</em>.
+     * <b>Return</b> the value associated with key in the {@link HashTable}, and <b>remove</b> the {@link phonebook.utils.KVPair} from the table.
+     * This method is expected to run in <em>amortized constant time</em>.
      * @param key The key to search for.
      * @return The {@link phonebook.utils.Probes} with associated value and the number of probe used. If the key is {@code null}, return value {@code null}
-     * and 0 as number of probes; if the key dones't exists in the database, return {@code null} and the number of probes used.
+     * and 0 as number of probes; if the key doesn't exist in the database, return {@code null} and the number of probes used.
      */
     Probes remove(String key);
 
