@@ -1,6 +1,7 @@
 package phonebook.hashes;
 
 import phonebook.exceptions.UnimplementedMethodException;
+import phonebook.utils.KVPair;
 import phonebook.utils.PrimeGenerator;
 import phonebook.utils.Probes;
 
@@ -12,7 +13,8 @@ import phonebook.utils.Probes;
  * inserted without collisions. {@link QuadraticProbingHashTable} is a {@link HashTable} that
  * tries to avoid this problem, albeit sacrificing cache locality.</p>
  *
- * @author YOUR NAME HERE!
+ * @author Isaac Solomon
+ *
  *
  * @see HashTable
  * @see SeparateChainingHashTable
@@ -36,7 +38,18 @@ public class OrderedLinearProbingHashTable extends OpenAddressingHashTable {
      *               we want soft deletion, {@code false} otherwise.
      */
     public OrderedLinearProbingHashTable(boolean soft){
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        primeGenerator = new PrimeGenerator();
+
+        table = new KVPair[primeGenerator.getCurrPrime()];
+
+
+        if (soft == true){
+            softFlag= true;
+        }
+        else{
+            softFlag = false;
+        }
+        count = 0;
     }
 
 
@@ -62,12 +75,299 @@ public class OrderedLinearProbingHashTable extends OpenAddressingHashTable {
      */
     @Override
     public Probes put(String key, String value) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        KVPair pair = new KVPair(key,value);
+        int numProbes = 0;
+
+
+        if (key == null || value == null) {
+            throw new IllegalArgumentException("null argument");
+        }
+
+        if (softFlag == false){//hard deletions
+
+            if ((float) size()/ table.length >= .5){//resizing time
+                KVPair[] temp = table;//hold onto old table
+
+                table = new KVPair[primeGenerator.getNextPrime()];//create bigger table
+
+                numProbes += resize(temp, table);//resize and reinsert into bigger table
+            }
+
+
+            if (table[hash(key)] == null) {//no collision, cell is empty
+                table[hash(key)] = pair;//simply insert our pair
+                numProbes++;
+
+            }
+
+            else{//collision
+                int index = hash(key);
+                KVPair currPair = pair;//hold onto current pair
+                boolean foundaHome = false;
+
+                while (foundaHome == false) {
+                    if (table[index] == null) {//found cell, insert
+                        table[index] = currPair;
+                        foundaHome = true;
+                        numProbes++;
+
+
+                    }
+                    else {
+
+                        if (currPair.getKey().compareTo(table[index].getKey()) < 0) {//current key is less than key at this index
+                            KVPair temp = table[index];//hold onto what was at this index
+                            table[index] = currPair;//set index to original pair
+                            currPair = temp; //set currPair to what was at this index
+
+                        }
+                        index++;
+                        numProbes++;
+
+                        if (index >= table.length) {//if index exceeds length, need to wrap around to start
+                            index = 0;//so set to 0
+                        }
+                    }
+
+
+                }
+
+
+            }
+
+        }
+
+        else{//soft deletions
+
+            if ((float) sizeWithTombstones()/ table.length >= .5){//resizing time
+                KVPair[] temp = table;//hold onto old table
+
+                table = new KVPair[primeGenerator.getNextPrime()];//create bigger table
+
+                numProbes += resize(temp, table);//resize and reinsert into bigger table
+            }
+
+
+            if (table[hash(key)] == null) {//no collision, cell is empty
+                table[hash(key)] = pair;//simply insert our pair
+                numProbes++;
+
+            }
+
+            else{//collision
+                int index = hash(key);
+                KVPair currPair = pair;//hold onto current pair
+                boolean foundaHome = false;
+
+                while (foundaHome == false){
+                    if (table[index] == null) {//found cell, insert
+                        table[index] = currPair;
+                        foundaHome = true;
+                        numProbes++;
+
+
+                    }
+                    else if (table[index] == TOMBSTONE){//tombstone, just keep swimming
+                        index++;
+                        numProbes++;
+
+                        if (index >= table.length) {//if index exceeds length, need to wrap around to start
+                            index = 0;//so set to 0
+                        }
+
+                    }
+                    else{//not empty, not tombstone
+                        if (currPair.getKey().compareTo(table[index].getKey()) < 0) {//current key is less than key at this index
+                            KVPair temp = table[index];//hold onto what was at this index
+                            table[index] = currPair;//set index to original pair
+                            currPair = temp; //set currPair to what was at this index
+
+                        }
+                        index++;
+                        numProbes++;
+
+                        if (index >= table.length) {//if index exceeds length, need to wrap around to start
+                            index = 0;//so set to 0
+                        }
+
+                    }
+
+
+                }
+
+
+            }
+
+
+        }
+
+
+        Probes num = new Probes(value, numProbes);
+        return num;
     }
+
+
+    public int resize(KVPair[] oldTable, KVPair[] newTable) {
+        int probes = 0;
+
+        for (int i = 0; i < oldTable.length; i++) {
+            if (oldTable[i] != null && oldTable[i] != TOMBSTONE) {//something there
+                KVPair temp = oldTable[i];
+
+                int index = hash(temp.getKey());//starting index
+
+                if (newTable[index] == null) {//no collision, cell is empty
+                    newTable[index] = temp;//simply insert our pair
+                    probes++;
+
+                }
+                else{
+                    KVPair currPair = temp;//hold onto current pair
+                    boolean foundaHome = false;
+
+                    while (foundaHome == false){
+                        if (newTable[index] == null) {//found cell, insert
+                            newTable[index] = currPair;
+                            foundaHome = true;
+                            probes++;
+
+
+                        }
+                        else{
+                            if (currPair.getKey().compareTo(newTable[index].getKey()) < 0) {//current key is less than key at this index
+                                KVPair tempy = table[index];//hold onto what was at this index
+                                table[index] = currPair;//set index to original pair
+                                currPair = tempy; //set currPair to what was at this index
+
+                            }
+                            index++;
+                            probes++;
+                            if (index >= newTable.length) {//if index exceeds length, need to wrap around to start
+                                index = 0;//so set to 0
+                            }
+
+                        }
+                    }
+
+                }
+
+
+            }
+            probes++;
+
+        }
+        return probes;
+    }
+
+
+
+
+
 
     @Override
     public Probes get(String key) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        int numProbes = 0;
+        String value = null;
+
+        if (key == null){
+            Probes probes = new Probes(null, 0);
+            return probes;
+        }
+
+        if (softFlag == false){//hard deletions
+
+            int index = hash(key);
+
+            boolean found = false;
+
+            while(found == false){
+                if (table[index] != null) {
+                    if (table[index].getKey() == key) {//found
+                        value = table[index].getValue();
+                        numProbes++;
+                        break;
+                    } else if (table[index].getKey().compareTo(key) > 0) {//greater than sought value, means not there and we can break immediately
+                        numProbes++;
+                        break;
+
+                    }
+                    else if (table[index].getKey().compareTo(key) <= 0 ){//less than or equal to sought value, can keep looking
+                        index++;
+                        numProbes++;
+
+                        if (index >= table.length){
+                            index = 0;
+                        }
+
+                    }
+
+                }
+                else{
+                    numProbes++;
+                    break;
+                }
+
+            }
+
+
+        }
+
+        else{//soft bois
+
+            int index = hash(key);
+
+            boolean found = false;
+
+            while (found == false){
+                if(table[index] != null){
+                    if (table[index].getKey() == key){
+                        value = table[index].getValue();
+                        numProbes++;
+                        break;
+                    }
+                    else if(table[index] == TOMBSTONE){//just keep going
+                        index++;
+                        numProbes++;
+
+                        if (index >= table.length){
+                            index = 0;
+                        }
+
+                    }
+                 else if (table[index].getKey().compareTo(key) > 0) {//greater than sought value, means not there and we can break immediately
+                    numProbes++;
+                    break;
+
+                }
+                else if (table[index].getKey().compareTo(key) <= 0 ){//less than or equal to sought value, can keep looking
+                    index++;
+                    numProbes++;
+
+                    if (index >= table.length){
+                        index = 0;
+                    }
+
+                }
+
+                }
+                else{
+                    numProbes++;
+                    break;
+                }
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+        Probes probes = new Probes(value, numProbes);
+        return probes;
     }
 
 
@@ -81,27 +381,255 @@ public class OrderedLinearProbingHashTable extends OpenAddressingHashTable {
      */
     @Override
     public Probes remove(String key) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        int numProbes = 0;
+        String value = null;
+
+        if (key == null){
+            Probes probes = new Probes(null, 0);
+            return probes;
+        }
+
+
+        if (softFlag == false) {//hard deletion
+
+            int index = hash(key);
+
+
+            if (table[index].getKey() == key) {//found
+                value = table[index].getValue();//grab value
+                numProbes++;
+                table[index] = null;//set to null
+                count--;
+
+
+                index++;//increment before reinserting cluster
+
+                if(index == table.length){
+                    index = 0;
+                }
+                int count = index;
+
+
+                if (table[index] == null){//no cluster, just increment probes
+                    numProbes++;
+
+                }
+                else {
+                    boolean done = false;
+
+                    while (done == false) {//reinsert stuff in cluster
+
+                        if (table[count] != null) {
+                            numProbes++;
+                            KVPair temp = table[count];
+                            table[count] = null;
+
+                            numProbes += put(temp.getKey(), temp.getValue()).getProbes();
+                            count++;
+
+                            if (count >= table.length) {
+                                count = 0;
+                            }
+                        }
+                        else{
+                            done = true;
+                            numProbes++;
+                            break;
+
+                        }
+
+                    }
+
+                }
+
+
+            }
+            else {//search through collision chain
+                boolean found = false;
+
+                while (found == false) {
+                    if (table[index] != null) {//something there
+                        if (table[index].getKey() == key) {//found
+                            value = table[index].getValue();
+                            numProbes++;
+                            table[index] = null;
+                            count--;
+
+                            found = true;
+
+                            index++;//increment before reinserting cluster
+
+                            if(index == table.length){
+                                index = 0;
+                            }
+                            int count = index;
+
+
+                            if (table[index] == null){//no cluster, just increment probes
+                                numProbes++;
+
+                            }
+                            else {
+
+                                while (table[count] != null) {//reinsert stuff in cluster
+                                    numProbes++;
+                                    KVPair temp = table[count];
+                                    table[count] = null;
+
+                                    numProbes += put(temp.getKey(), temp.getValue()).getProbes();
+                                    count++;
+
+                                    if (count >= table.length) {
+                                        count = 0;
+                                    }
+
+                                }
+                            }
+
+
+
+                        } else if ((table[index].getKey() != key) && (table[index] != null)) {//keep looking
+                            index++;
+                            numProbes++;
+
+                            if (index >= table.length) {
+                                index = 0;//reset index
+                            }
+
+
+                        }
+                    }
+                    else if (table[index] == null) {
+                        numProbes++;
+                        break;
+                    }
+
+
+                }
+
+            }
+        }
+
+        else{//soft deletion
+
+            int index = hash(key);
+
+            if (table[index] == null){
+                Probes probes = new Probes(null, 1);
+                return probes;
+
+            }
+
+            if (table[index].getKey() == key) {//found
+                value = table[index].getValue();//grab value
+                numProbes++;
+                table[index] = TOMBSTONE;//set to tombstone
+                count--;
+            }
+            else{//search thru cluster
+                boolean found = false;
+
+                while (found == false){
+                    if (table[index] != null){
+                        if (table[index].getKey() == key) {//found
+                            value = table[index].getValue();
+                            numProbes++;
+                            table[index] = TOMBSTONE;
+                            count--;
+
+                            found = true;
+                        }
+                        else if(table[index].getKey() != key || table[index] == TOMBSTONE){
+                            index++;
+                            numProbes++;
+
+                            if (index >= table.length) {
+                                index = 0;//reset index
+                            }
+
+
+                        }
+
+                        }
+                    else if (table[index] == null) {
+                        numProbes++;
+                        break;
+                    }
+
+                    }
+                }
+
+            }
+
+
+
+
+
+
+
+        Probes probes = new Probes(value, numProbes);
+        return probes;
     }
 
     @Override
     public boolean containsKey(String key) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        boolean contains = false;
+
+        for (int i = 0; i<table.length; i++){
+            if (table[i].getKey() == key){
+                contains = true;
+                break;
+            }
+        }
+
+
+        return contains;
     }
 
     @Override
     public boolean containsValue(String value) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        boolean contains = false;
+
+        for (int i = 0; i<table.length; i++){
+            if (table[i].getValue() == value){
+                contains = true;
+                break;
+            }
+        }
+
+
+        return contains;
     }
 
     @Override
     public int size() {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        int size = 0;
+
+        for (int i = 0; i<table.length; i++){
+            if (table[i] != null){
+                size++;
+            }
+        }
+        count = size;
+        return size;
+    }
+
+    public int sizeWithTombstones(){
+        int size = 0;
+
+        for (int i = 0; i<table.length; i++){
+            if (table[i] != null){
+                size++;
+            }
+        }
+        count = size;
+        return size;
+
     }
 
     @Override
     public int capacity() {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        return table.length;
     }
 
 }

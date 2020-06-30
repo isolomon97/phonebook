@@ -5,6 +5,8 @@ import phonebook.utils.KVPairList;
 import phonebook.utils.PrimeGenerator;
 import phonebook.utils.Probes;
 
+import java.lang.reflect.Array;
+
 /**<p>{@link SeparateChainingHashTable} is a {@link HashTable} that implements <b>Separate Chaining</b>
  * as its collision resolution strategy, i.e the collision chains are implemented as actual
  * Linked Lists. These Linked Lists are <b>not assumed ordered</b>. It is the easiest and most &quot; natural &quot; way to
@@ -13,7 +15,7 @@ import phonebook.utils.Probes;
  * Open Addressing methods, like those implemented in {@link LinearProbingHashTable} and {@link QuadraticProbingHashTable}
  * are more desirable in practice, since they use the original space of the table for the collision chains themselves.</p>
  *
- * @author YOUR NAME HERE!
+ * @author Isaac Solomon
  * @see HashTable
  * @see SeparateChainingHashTable
  * @see LinearProbingHashTable
@@ -29,6 +31,7 @@ public class SeparateChainingHashTable implements HashTable{
     private KVPairList[] table;
     private int count;
     private PrimeGenerator primeGenerator;
+    //private static int probes = 0;
 
     // We mask the top bit of the default hashCode() to filter away negative values.
     // Have to copy over the implementation from OpenAddressingHashTable; no biggie.
@@ -43,37 +46,75 @@ public class SeparateChainingHashTable implements HashTable{
      *  Default constructor. Initializes the internal storage with a size equal to the default of {@link PrimeGenerator}.
      */
     public SeparateChainingHashTable(){
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        primeGenerator = new PrimeGenerator();
+        int prime = primeGenerator.getCurrPrime();
+
+
+        table = new KVPairList[prime];
+
+        for (int i = 0; i<table.length; i++){
+            table[i] = new KVPairList();//initialize each bucket
+
+        }
+
+        count = 0;
     }
+
+
+
 
     @Override
     public Probes put(String key, String value) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        Probes num = new Probes(value, 1);
+
+
+        table[hash(key)].addBack(key, value);
+
+        count++;
+
+
+        return num;
     }
 
     @Override
     public Probes get(String key) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        return table[hash(key)].getValue(key);
+
     }
 
     @Override
     public Probes remove(String key) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+
+        if (table[hash(key)].containsKey(key) == true){
+            count--;
+        }
+        Probes result = table[hash(key)].removeByKey(key);
+
+
+        return result;
     }
 
     @Override
     public boolean containsKey(String key) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        return table[hash(key)].containsKey(key);
     }
 
     @Override
     public boolean containsValue(String value) {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+
+        for (int i = 0; i < table.length; i++){
+            if (table[i].containsValue(value) == true){
+                return true;
+            }
+        }
+
+
+        return false;
     }
 
     @Override
     public int size() {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        return count;
     }
 
     @Override
@@ -88,7 +129,16 @@ public class SeparateChainingHashTable implements HashTable{
      * @see PrimeGenerator#getNextPrime()
      */
     public void enlarge() {
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        int newPrime = primeGenerator.getNextPrime();
+
+        KVPairList[] temp = table;//hold on to old table
+
+
+        table = new KVPairList[newPrime];
+
+
+
+
     }
 
     /**
@@ -99,6 +149,12 @@ public class SeparateChainingHashTable implements HashTable{
      * @see PrimeGenerator#getPreviousPrime()
      */
     public void shrink(){
-        throw new UnimplementedMethodException(); // ERASE THIS LINE AFTER IMPLEMENTING THIS METHOD!
+        int newPrime = primeGenerator.getPreviousPrime();
+
+        KVPairList[] temp = table;//hold on to old table
+
+        table = new KVPairList[newPrime];
+
+
     }
 }

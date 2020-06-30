@@ -213,6 +213,7 @@ public class StudentTests {
 
 
     }
+    /*
 
     @Test
     public void testResizeSoftLProbes() {
@@ -241,5 +242,40 @@ public class StudentTests {
 
     }
 
+*/
 
+    @Test
+    public void myLP(){
+
+        LinearProbingHashTable lp = new LinearProbingHashTable(true);
+
+        System.out.println(lp.put("isaac", "543535").getProbes());
+
+        System.out.println(lp.put("bob", "fewfwfwe453").getProbes());
+
+        System.out.println(lp.put("aaron", "54432423535").getProbes());
+
+        System.out.println(lp.put("mom", "6323535").getProbes());
+
+        System.out.println(lp.put("dad", "223535").getProbes());
+
+        System.out.println(lp.put("tonio", "543443535").getProbes());
+
+        System.out.println(lp.put("john", "5435653635").getProbes());
+
+        System.out.println(lp.put("troy", "543gregre535").getProbes());
+
+        System.out.println(lp.remove("troy").getProbes());
+
+        System.out.println(lp.put("sara", "543535").getProbes());
+
+        System.out.println(lp.remove("isaac").getProbes());
+
+        System.out.println(lp.get("isaac").getProbes());
+
+
+
+
+
+    }
 }
